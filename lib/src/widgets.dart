@@ -33,28 +33,72 @@ class Chatbot extends StatefulWidget {
   State<Chatbot> createState() => _ChatbotState();
 }
 
-class _ChatbotState extends State<Chatbot> {
+class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
+  late final AnimationController _anim = AnimationController(vsync: this, value: widget.controller.isOpen ? 1 : 0);
+  late final CurvedAnimation _curved = CurvedAnimation(parent: _anim, curve: widget.theme.openCurve);
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_sync);
+  }
+
+  @override
+  void didUpdateWidget(Chatbot old) {
+    super.didUpdateWidget(old);
+    if (old.controller == widget.controller) return;
+    old.controller.removeListener(_sync);
+    widget.controller.addListener(_sync);
+    _sync();
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_sync);
+    _curved.dispose();
+    _anim.dispose();
+    super.dispose();
+  }
+
+  void _sync() {
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    _anim.duration = reduce ? Duration.zero : widget.theme.openDuration;
+    widget.controller.isOpen ? _anim.forward() : _anim.reverse();
+  }
+
+  static Widget _grow(Animation<double> a, Alignment origin, Widget window) => FadeTransition(
+    opacity: a,
+    child: ScaleTransition(scale: a, alignment: origin, child: window),
+  );
+
   @override
   Widget build(BuildContext context) {
     final t = widget.theme;
     final c = widget.controller;
+    final m = widget.margin;
+    final s = t.helpButtonSize;
+    // Window and button share the right edge; the button sits [m] below the window.
+    final origin = FractionalOffset((t.windowWidth - s / 2) / t.windowWidth, (t.windowHeight + m + s / 2) / t.windowHeight);
+    _curved
+      ..curve = t.openCurve
+      ..reverseCurve = t.closeCurve;
     return _Scope(
       controller: c,
       theme: t,
       child: ListenableBuilder(
-        listenable: c,
+        listenable: Listenable.merge([c, _anim]),
         builder: (context, _) => Stack(
           children: [
             Positioned.fill(child: widget.child),
-            if (c.isOpen)
+            if (!_anim.isDismissed)
               Positioned(
-                right: widget.margin,
-                bottom: widget.margin * 2 + t.helpButtonSize,
-                child: _Window(controller: c, theme: t),
+                right: m,
+                bottom: m * 2 + s,
+                child: (t.windowTransition ?? _grow)(_curved, origin, _Window(controller: c, theme: t)),
               ),
             Positioned(
-              right: widget.margin,
-              bottom: widget.margin,
+              right: m,
+              bottom: m,
               child: _HelpButton(controller: c, theme: t),
             ),
           ],

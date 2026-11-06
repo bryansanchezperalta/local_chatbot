@@ -62,7 +62,22 @@ ChatbotHighlight(id: 'nome', child: TextField(...))
 | Bubbles | `assistantBubbleColor`, `assistantTextColor`, `userBubbleColor`, `userTextColor`, `bubbleRadius`, `bubbleTailRadius` |
 | Options | `optionShape` (`pill`, `row`, `button`), `optionColor`, `optionBorderColor`, `optionBorderWidth`, `optionTextColor`, `optionRadius`, `optionPaddingH`, `optionPaddingV` |
 | Help button | `helpButtonColor`, `helpIconColor`, `helpButtonRadius`, `helpButtonSize`, `helpIcon` |
+| Animation | `streamCharDuration`, `openDuration`, `openCurve`, `closeCurve`, `windowTransition` |
 | Highlight | `highlightColor`, `highlightWidth`, `highlightRadius` |
 | Font | `fontFamily`, `regularWeight`, `strongWeight`, `textSize` |
+
+By default the window grows out of the help button and fades in. `windowTransition` replaces that animation; it gets the open animation (0 closed, 1 open), the centre of the help button and the window:
+
+```dart
+ChatbotTheme(
+  openDuration: const Duration(milliseconds: 300),
+  windowTransition: (animation, origin, window) => SlideTransition(
+    position: Tween(begin: const Offset(0, 1), end: Offset.zero).animate(animation),
+    child: window,
+  ),
+)
+```
+
+With "reduce motion" on, the window opens and closes at once.
 
 The defaults match "Esempio 1" of the design. The design is in `design/local_chatbot.figcraft`: each of its "Assistente" variables maps to one of these settings.

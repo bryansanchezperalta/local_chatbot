@@ -25,6 +25,7 @@ Package Flutter pubblico, progetto personale del socio (non Aura). Repository pu
 ## Codice: stato
 - Package Flutter 0.0.1 in `lib/`: `ChatbotScript`/`ChatbotStep`/`ChatbotOption` (copione), `ChatbotController`, `Chatbot` (pulsante Aiuto + finestra in basso a destra), `ChatbotHighlight`, `ChatbotTheme` (tutte le impostazioni del design; default = Esempio 1).
 - I messaggi dell'assistente compaiono una lettera alla volta (stile stream). Le opzioni appaiono solo a messaggio finito. Velocità: `ChatbotTheme.streamCharDuration` (20 ms, `Duration.zero` = spento). Con "riduci animazioni" attivo il testo appare subito.
+- La finestra si apre e si chiude con un'animazione: per default cresce dal pulsante Aiuto e appare in dissolvenza (simile a Hero). Si personalizza con `openDuration` (250 ms, `Duration.zero` = spento), `openCurve`, `closeCurve` e `windowTransition` (sostituisce tutta l'animazione). Con "riduci animazioni" attivo si apre subito.
 - La finestra ha altezza fissa (`ChatbotTheme.windowHeight`, 420) e la lista dei messaggi scorre. I primi messaggi stanno in alto. Quando la lista è lunga resta visibile l'ultimo messaggio.
 - Nel codice le opzioni Riga e Pulsante seguono la larghezza della finestra: il limite del design non c'è.
 - Flutter SDK su questo computer: `~/flutter/bin/flutter` (non nel PATH).

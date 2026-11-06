@@ -1,6 +1,10 @@
 import 'package:flutter/widgets.dart';
 
 /// How options are drawn.
+/// Draws the chat window while it opens (animation 0 to 1) and closes (1 to 0).
+/// [origin] is the centre of the help button, relative to the window.
+typedef ChatbotWindowTransition = Widget Function(Animation<double> animation, Alignment origin, Widget window);
+
 enum ChatbotOptionShape {
   /// As wide as its text.
   pill,
@@ -37,6 +41,10 @@ class ChatbotTheme {
     this.bubbleRadius = 12,
     this.bubbleTailRadius = 4,
     this.streamCharDuration = const Duration(milliseconds: 20),
+    this.openDuration = const Duration(milliseconds: 250),
+    this.openCurve = Curves.easeOutCubic,
+    this.closeCurve = Curves.easeInCubic,
+    this.windowTransition,
     this.optionShape = ChatbotOptionShape.pill,
     this.optionColor = const Color(0xFFFFFFFF),
     this.optionBorderColor = const Color(0xFFB3D4F5),
@@ -86,6 +94,14 @@ class ChatbotTheme {
 
   /// Time per character while an assistant message is typed out. [Duration.zero] shows it at once.
   final Duration streamCharDuration;
+
+  /// Time the window takes to open or close. [Duration.zero] turns the animation off.
+  final Duration openDuration;
+  final Curve openCurve;
+  final Curve closeCurve;
+
+  /// `null`: the window grows out of the help button and fades in.
+  final ChatbotWindowTransition? windowTransition;
 
   final ChatbotOptionShape optionShape;
   final Color optionColor;

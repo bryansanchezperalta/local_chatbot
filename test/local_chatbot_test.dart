@@ -148,4 +148,41 @@ void main() {
     expect(scroll.reverse, isTrue);
     expect(tester.state<ScrollableState>(find.byType(Scrollable)).position.maxScrollExtent, greaterThan(0));
   });
+
+  testWidgets('window animates open from the help button and stays until it has closed', (tester) async {
+    final c = ChatbotController(script: script);
+    await tester.pumpWidget(Directionality(
+      textDirection: TextDirection.ltr,
+      child: Chatbot(controller: c, theme: const ChatbotTheme(openDuration: Duration(milliseconds: 100)), child: const SizedBox()),
+    ));
+    c.open();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    final scale = tester.widget<ScaleTransition>(find.byType(ScaleTransition));
+    expect(scale.scale.value, inExclusiveRange(0, 1));
+    expect((scale.alignment as FractionalOffset).dy, greaterThan(1));
+
+    await tester.pumpAndSettle();
+    c.close();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Assistente'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Assistente'), findsNothing);
+  });
+
+  testWidgets('custom window transition replaces the default', (tester) async {
+    final c = ChatbotController(script: script);
+    await tester.pumpWidget(Directionality(
+      textDirection: TextDirection.ltr,
+      child: Chatbot(
+        controller: c,
+        theme: ChatbotTheme(windowTransition: (a, origin, window) => SizeTransition(sizeFactor: a, child: window)),
+        child: const SizedBox(),
+      ),
+    ));
+    c.open();
+    await tester.pumpAndSettle();
+    expect(find.byType(SizeTransition), findsOneWidget);
+    expect(find.byType(ScaleTransition), findsNothing);
+  });
 }
