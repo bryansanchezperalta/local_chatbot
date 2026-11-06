@@ -56,7 +56,7 @@ ChatbotHighlight(id: 'nome', child: TextField(...))
 
 | Part | Settings |
 |---|---|
-| Window | `windowColor`, `windowBorderColor`, `windowBorderWidth`, `windowRadius`, `windowShadowColor`, `windowShadowBlur`, `windowWidth`, `windowMaxHeight` |
+| Window | `windowColor`, `windowBorderColor`, `windowBorderWidth`, `windowRadius`, `windowShadowColor`, `windowShadowBlur`, `windowWidth`, `windowHeight` |
 | Header | `headerColor`, `headerTitleColor`, `headerCloseColor`, `headerTitleSize`, `title` |
 | Messages | `messageGap`, `messagePadding` |
 | Bubbles | `assistantBubbleColor`, `assistantTextColor`, `userBubbleColor`, `userTextColor`, `bubbleRadius`, `bubbleTailRadius` |

@@ -22,7 +22,7 @@ class ChatbotTheme {
     this.windowShadowColor = const Color(0x1A000000),
     this.windowShadowBlur = 20,
     this.windowWidth = 240,
-    this.windowMaxHeight = 420,
+    this.windowHeight = 420,
     this.headerColor = const Color(0xFFFFFFFF),
     this.headerTitleColor = const Color(0xFF1C1C1E),
     this.headerCloseColor = const Color(0xFF8E8E93),
@@ -36,6 +36,7 @@ class ChatbotTheme {
     this.userTextColor = const Color(0xFFFFFFFF),
     this.bubbleRadius = 12,
     this.bubbleTailRadius = 4,
+    this.streamCharDuration = const Duration(milliseconds: 20),
     this.optionShape = ChatbotOptionShape.pill,
     this.optionColor = const Color(0xFFFFFFFF),
     this.optionBorderColor = const Color(0xFFB3D4F5),
@@ -65,7 +66,7 @@ class ChatbotTheme {
   final Color windowShadowColor;
   final double windowShadowBlur;
   final double windowWidth;
-  final double windowMaxHeight;
+  final double windowHeight;
 
   final Color headerColor;
   final Color headerTitleColor;
@@ -82,6 +83,9 @@ class ChatbotTheme {
   final Color userTextColor;
   final double bubbleRadius;
   final double bubbleTailRadius;
+
+  /// Time per character while an assistant message is typed out. [Duration.zero] shows it at once.
+  final Duration streamCharDuration;
 
   final ChatbotOptionShape optionShape;
   final Color optionColor;

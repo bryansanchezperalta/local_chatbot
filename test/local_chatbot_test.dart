@@ -83,17 +83,69 @@ void main() {
     expect(find.text('Ciao! Cosa vuoi fare?'), findsNothing);
 
     await tester.tap(find.text('?'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
 
     await tester.tap(find.text('Registrare un iscritto'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Fatto, avanti'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Scrivi nome e cognome.'), findsOneWidget);
     expect(
       find.descendant(of: find.byType(ChatbotHighlight), matching: find.byType(DecoratedBox)),
       findsOneWidget,
     );
+  });
+
+  testWidgets('assistant message streams in; options wait for it', (tester) async {
+    final c = ChatbotController(script: script);
+    await tester.pumpWidget(Directionality(
+      textDirection: TextDirection.ltr,
+      child: Chatbot(controller: c, theme: const ChatbotTheme(streamCharDuration: Duration(milliseconds: 10)), child: const SizedBox()),
+    ));
+    c.open();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('Ciao!'), findsOneWidget);
+    expect(find.text('Chiudi'), findsNothing);
+
+    await tester.pumpAndSettle();
+    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
+    expect(find.text('Chiudi'), findsOneWidget);
+  });
+
+  testWidgets('zero stream duration shows message and options at once', (tester) async {
+    final c = ChatbotController(script: script);
+    await tester.pumpWidget(Directionality(
+      textDirection: TextDirection.ltr,
+      child: Chatbot(controller: c, theme: const ChatbotTheme(streamCharDuration: Duration.zero), child: const SizedBox()),
+    ));
+    c.open();
+    await tester.pump();
+    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
+    expect(find.text('Chiudi'), findsOneWidget);
+  });
+
+  testWidgets('window keeps its height and scrolls when the chat is long', (tester) async {
+    final c = ChatbotController(script: script);
+    await tester.pumpWidget(Directionality(
+      textDirection: TextDirection.ltr,
+      child: Chatbot(controller: c, theme: const ChatbotTheme(windowHeight: 150, windowBorderWidth: 0), child: const SizedBox()),
+    ));
+    final window = find.ancestor(of: find.text('Assistente'), matching: find.byType(ClipRRect));
+    c.open();
+    await tester.pumpAndSettle();
+    expect(tester.getSize(window).height, 150);
+
+    for (var i = 0; i < 3; i++) {
+      c.choose(c.options.first);
+      await tester.pumpAndSettle();
+      c.choose(c.options.first);
+      await tester.pumpAndSettle();
+    }
+    expect(tester.getSize(window).height, 150);
+    final scroll = tester.widget<SingleChildScrollView>(find.byType(SingleChildScrollView));
+    expect(scroll.reverse, isTrue);
+    expect(tester.state<ScrollableState>(find.byType(Scrollable)).position.maxScrollExtent, greaterThan(0));
   });
 }

@@ -6,7 +6,7 @@ import 'theme.dart';
 
 class _Scope extends InheritedNotifier<ChatbotController> {
   const _Scope({required ChatbotController controller, required this.theme, required super.child})
-      : super(notifier: controller);
+    : super(notifier: controller);
   final ChatbotTheme theme;
 
   @override
@@ -87,26 +87,40 @@ class _HelpButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(t.helpButtonRadius),
             boxShadow: [BoxShadow(color: t.windowShadowColor, blurRadius: 12, offset: const Offset(0, 4))],
           ),
-          child: Text(controller.isOpen ? '×' : t.helpIcon,
-              style: t.text(t.helpIconColor, size: t.helpButtonSize * 0.45)),
+          child: Text(
+            controller.isOpen ? '×' : t.helpIcon,
+            style: t.text(t.helpIconColor, size: t.helpButtonSize * 0.45),
+          ),
         ),
       ),
     );
   }
 }
 
-class _Window extends StatelessWidget {
+class _Window extends StatefulWidget {
   const _Window({required this.controller, required this.theme});
   final ChatbotController controller;
   final ChatbotTheme theme;
 
   @override
+  State<_Window> createState() => _WindowState();
+}
+
+class _WindowState extends State<_Window> {
+  /// Last assistant message whose typing has finished.
+  ChatbotMessage? _streamed;
+
+  @override
   Widget build(BuildContext context) {
-    final t = theme;
+    final t = widget.theme;
+    final controller = widget.controller;
+    final last = controller.messages.lastOrNull;
+    final instant = t.streamCharDuration == Duration.zero || (MediaQuery.maybeDisableAnimationsOf(context) ?? false);
+    final streaming = !instant && last != null && !last.fromUser && last != _streamed;
     final radius = BorderRadius.circular(t.windowRadius);
     return Container(
       width: t.windowWidth,
-      constraints: BoxConstraints(maxHeight: t.windowMaxHeight),
+      height: t.windowHeight,
       decoration: BoxDecoration(
         color: t.windowColor,
         borderRadius: radius,
@@ -116,7 +130,6 @@ class _Window extends StatelessWidget {
       child: ClipRRect(
         borderRadius: radius,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
@@ -124,7 +137,9 @@ class _Window extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
               child: Row(
                 children: [
-                  Expanded(child: Text(t.title, style: t.text(t.headerTitleColor, strong: true, size: t.headerTitleSize))),
+                  Expanded(
+                    child: Text(t.title, style: t.text(t.headerTitleColor, strong: true, size: t.headerTitleSize)),
+                  ),
                   Semantics(
                     button: true,
                     label: 'Chiudi',
@@ -141,17 +156,33 @@ class _Window extends StatelessWidget {
                 ],
               ),
             ),
-            Flexible(
-              child: SingleChildScrollView(
-                reverse: true,
-                padding: EdgeInsets.all(t.messagePadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final m in controller.messages) _Bubble(message: m, theme: t),
-                    for (final o in controller.options)
-                      _Option(option: o, theme: t, onTap: () => controller.choose(o)),
-                  ].expand((w) => [w, SizedBox(height: t.messageGap)]).toList()..removeLast(),
+            Expanded(
+              // reverse keeps the newest message in view; the min height keeps short chats at the top.
+              child: LayoutBuilder(
+                builder: (context, box) => SingleChildScrollView(
+                  reverse: true,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: box.maxHeight),
+                    child: Padding(
+                      padding: EdgeInsets.all(t.messagePadding),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final m in controller.messages)
+                            _Bubble(
+                              key: ObjectKey(m),
+                              message: m,
+                              theme: t,
+                              onStreamed: streaming && m == last ? () => setState(() => _streamed = m) : null,
+                            ),
+                          if (!streaming)
+                            for (final o in controller.options)
+                              _Option(option: o, theme: t, onTap: () => controller.choose(o)),
+                        ].expand((w) => [w, SizedBox(height: t.messageGap)]).toList()..removeLast(),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -163,9 +194,12 @@ class _Window extends StatelessWidget {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message, required this.theme});
+  const _Bubble({super.key, required this.message, required this.theme, this.onStreamed});
   final ChatbotMessage message;
   final ChatbotTheme theme;
+
+  /// Non-null: type the text out, then call this.
+  final VoidCallback? onStreamed;
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +220,58 @@ class _Bubble extends StatelessWidget {
             bottomRight: user ? tail : r,
           ),
         ),
-        child: Text(message.text, style: t.text(user ? t.userTextColor : t.assistantTextColor)),
+        child: _StreamText(
+          text: message.text,
+          style: t.text(user ? t.userTextColor : t.assistantTextColor),
+          charDuration: t.streamCharDuration,
+          onDone: onStreamed,
+        ),
+      ),
+    );
+  }
+}
+
+/// Types [text] out one character at a time when [onDone] is set; otherwise shows it whole.
+class _StreamText extends StatefulWidget {
+  const _StreamText({required this.text, required this.style, required this.charDuration, this.onDone});
+  final String text;
+  final TextStyle style;
+  final Duration charDuration;
+  final VoidCallback? onDone;
+
+  @override
+  State<_StreamText> createState() => _StreamTextState();
+}
+
+class _StreamTextState extends State<_StreamText> with SingleTickerProviderStateMixin {
+  late final Characters _chars = widget.text.characters;
+  late final AnimationController _anim = AnimationController(
+    vsync: this,
+    duration: widget.charDuration * _chars.length,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.onDone != null) _anim.forward().whenComplete(() => widget.onDone?.call());
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.onDone == null) return Text(widget.text, style: widget.style);
+    return Semantics(
+      label: widget.text,
+      excludeSemantics: true,
+      child: AnimatedBuilder(
+        animation: _anim,
+        builder: (context, _) =>
+            Text(_chars.take((_anim.value * _chars.length).ceil()).toString(), style: widget.style),
       ),
     );
   }
@@ -203,7 +288,11 @@ class _Option extends StatelessWidget {
     final t = theme;
     final style = t.text(t.optionTextColor, strong: true);
     final shape = t.optionShape;
-    final label = Text(option.label, style: style, textAlign: shape == ChatbotOptionShape.button ? TextAlign.center : null);
+    final label = Text(
+      option.label,
+      style: style,
+      textAlign: shape == ChatbotOptionShape.button ? TextAlign.center : null,
+    );
     final box = Container(
       padding: EdgeInsets.symmetric(horizontal: t.optionPaddingH, vertical: t.optionPaddingV),
       decoration: BoxDecoration(
@@ -213,7 +302,12 @@ class _Option extends StatelessWidget {
       ),
       child: switch (shape) {
         ChatbotOptionShape.pill => label,
-        ChatbotOptionShape.row => Row(children: [Expanded(child: label), Text('›', style: style)]),
+        ChatbotOptionShape.row => Row(
+          children: [
+            Expanded(child: label),
+            Text('›', style: style),
+          ],
+        ),
         ChatbotOptionShape.button => label,
       },
     );
