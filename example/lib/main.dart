@@ -32,14 +32,16 @@ class _DemoAppState extends State<DemoApp> {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        builder: (context, child) => Chatbot(controller: _chatbot, child: child!),
-        home: const Scaffold(
-          body: Center(
-            child: SizedBox(
-              width: 300,
-              child: ChatbotHighlight(
-                id: 'nome',
-                child: TextField(decoration: InputDecoration(labelText: 'Nome e cognome')),
+        home: Scaffold(
+          body: Chatbot(
+            controller: _chatbot,
+            child: const Center(
+              child: SizedBox(
+                width: 300,
+                child: ChatbotHighlight(
+                  id: 'nome',
+                  child: TextField(decoration: InputDecoration(labelText: 'Nome e cognome')),
+                ),
               ),
             ),
           ),

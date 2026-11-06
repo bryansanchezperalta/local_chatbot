@@ -13,7 +13,7 @@ class _Scope extends InheritedNotifier<ChatbotController> {
   bool updateShouldNotify(_Scope old) => super.updateShouldNotify(old) || theme != old.theme;
 }
 
-/// Wraps the host app: draws the help button and, when open, the chat window
+/// Wraps the host screen (needs a Material ancestor, e.g. put it as Scaffold body): draws the help button and, when open, the chat window
 /// in the bottom-right corner.
 class Chatbot extends StatefulWidget {
   const Chatbot({
