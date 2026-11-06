@@ -36,7 +36,7 @@ All written text in this repository is in English: code comments, doc comments, 
 - `Chatbot.margin` is `EdgeInsets` (right and bottom used), `Chatbot.gap` is the space between button and window. Found on gym-toolbox: the help button covered the floating action buttons.
 - Default UI strings are English (`title` "Assistant", semantics labels "Open …"/"Close …").
 - Flutter SDK on this computer: `~/flutter/bin/flutter` (not in PATH).
-- `LICENSE` is still the `flutter create` placeholder: the partner must choose the license.
+- `LICENSE` is MIT (2026, Bryan Sanchez Peralta).
 
 ## Method: TDD (decided 2026-11-06)
 Every new development (feature, behavior change, bug fix) starts with the test:
