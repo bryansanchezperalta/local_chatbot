@@ -3,17 +3,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:local_chatbot/local_chatbot.dart';
 
 const script = ChatbotScript(start: 'home', steps: {
-  'home': ChatbotStep(message: 'Ciao! Cosa vuoi fare?', options: [
-    ChatbotOption('Registrare un iscritto', next: 'tessera'),
-    ChatbotOption('Chiudi'),
+  'home': ChatbotStep(message: 'Hi! What do you want to do?', options: [
+    ChatbotOption('Register a member', next: 'card'),
+    ChatbotOption('Close'),
   ]),
-  'tessera': ChatbotStep(
-    message: 'Primo passo: la tessera.',
-    action: 'open:nuovo_iscritto',
-    options: [ChatbotOption('Fatto, avanti', next: 'nome', action: 'tessera_ok')],
+  'card': ChatbotStep(
+    message: 'First step: the card.',
+    action: 'open:new_member',
+    options: [ChatbotOption('Done, next', next: 'name', action: 'card_ok')],
   ),
-  'nome': ChatbotStep(message: 'Scrivi nome e cognome.', highlight: 'nome', options: [
-    ChatbotOption('Torna indietro', next: 'tessera'),
+  'name': ChatbotStep(message: 'Write first and last name.', highlight: 'name', options: [
+    ChatbotOption('Go back', next: 'card'),
   ]),
 });
 
@@ -47,18 +47,18 @@ void main() {
     test('open shows the start step', () {
       c.open();
       expect(c.isOpen, isTrue);
-      expect(c.messages.single.text, 'Ciao! Cosa vuoi fare?');
-      expect(c.options.map((o) => o.label), ['Registrare un iscritto', 'Chiudi']);
+      expect(c.messages.single.text, 'Hi! What do you want to do?');
+      expect(c.options.map((o) => o.label), ['Register a member', 'Close']);
     });
 
     test('choosing records the reply, runs step and option actions, moves on', () {
       c.open();
       c.choose(c.options.first);
-      expect(actions, ['open:nuovo_iscritto']);
+      expect(actions, ['open:new_member']);
       c.choose(c.options.single);
-      expect(actions, ['open:nuovo_iscritto', 'tessera_ok']);
-      expect(c.messages.where((m) => m.fromUser).map((m) => m.text), ['Registrare un iscritto', 'Fatto, avanti']);
-      expect(c.highlight, 'nome');
+      expect(actions, ['open:new_member', 'card_ok']);
+      expect(c.messages.where((m) => m.fromUser).map((m) => m.text), ['Register a member', 'Done, next']);
+      expect(c.highlight, 'name');
     });
 
     test('option without next closes and clears highlight', () {
@@ -94,7 +94,7 @@ void main() {
       final quiet = ChatbotController(script: script)..open();
       quiet.choose(quiet.options.first);
       quiet.choose(quiet.options.single);
-      expect(quiet.highlight, 'nome');
+      expect(quiet.highlight, 'name');
     });
 
     test('unknown step id fails loudly', () {
@@ -107,19 +107,19 @@ void main() {
     await pumpChatbot(
       tester,
       theme: const ChatbotTheme(optionShape: ChatbotOptionShape.row),
-      child: const Center(child: ChatbotHighlight(id: 'nome', child: SizedBox(width: 100, height: 20))),
+      child: const Center(child: ChatbotHighlight(id: 'name', child: SizedBox(width: 100, height: 20))),
     );
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsNothing);
+    expect(find.text('Hi! What do you want to do?'), findsNothing);
 
     await tester.tap(find.text('?'));
     await tester.pumpAndSettle();
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
+    expect(find.text('Hi! What do you want to do?'), findsOneWidget);
 
-    await tester.tap(find.text('Registrare un iscritto'));
+    await tester.tap(find.text('Register a member'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Fatto, avanti'));
+    await tester.tap(find.text('Done, next'));
     await tester.pumpAndSettle();
-    expect(find.text('Scrivi nome e cognome.'), findsOneWidget);
+    expect(find.text('Write first and last name.'), findsOneWidget);
     expect(
       find.descendant(of: find.byType(ChatbotHighlight), matching: find.byType(DecoratedBox)),
       findsOneWidget,
@@ -131,25 +131,25 @@ void main() {
     c.open();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('Ciao!'), findsOneWidget);
-    expect(find.text('Chiudi'), findsNothing);
+    expect(find.text('Hi! W'), findsOneWidget);
+    expect(find.text('Close'), findsNothing);
 
     await tester.pumpAndSettle();
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
-    expect(find.text('Chiudi'), findsOneWidget);
+    expect(find.text('Hi! What do you want to do?'), findsOneWidget);
+    expect(find.text('Close'), findsOneWidget);
   });
 
   testWidgets('zero stream duration shows message and options at once', (tester) async {
     final c = await pumpChatbot(tester, theme: const ChatbotTheme(streamCharDuration: Duration.zero));
     c.open();
     await tester.pump();
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
-    expect(find.text('Chiudi'), findsOneWidget);
+    expect(find.text('Hi! What do you want to do?'), findsOneWidget);
+    expect(find.text('Close'), findsOneWidget);
   });
 
   testWidgets('window keeps its height and scrolls when the chat is long', (tester) async {
     final c = await pumpChatbot(tester, theme: const ChatbotTheme(windowHeight: 150, windowBorderWidth: 0));
-    final window = find.ancestor(of: find.text('Assistente'), matching: find.byType(ClipRRect));
+    final window = find.ancestor(of: find.text('Assistant'), matching: find.byType(ClipRRect));
     c.open();
     await tester.pumpAndSettle();
     expect(tester.getSize(window).height, 150);
@@ -178,9 +178,9 @@ void main() {
     await tester.pumpAndSettle();
     c.close();
     await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('Assistente'), findsOneWidget);
+    expect(find.text('Assistant'), findsOneWidget);
     await tester.pumpAndSettle();
-    expect(find.text('Assistente'), findsNothing);
+    expect(find.text('Assistant'), findsNothing);
   });
 
   testWidgets('custom window transition replaces the default', (tester) async {
@@ -196,19 +196,19 @@ void main() {
 
   testWidgets('help button and header close button both close the chat', (tester) async {
     final c = await pumpChatbot(tester);
-    await tester.tap(find.bySemanticsLabel('Apri Assistente'));
+    await tester.tap(find.bySemanticsLabel('Open Assistant'));
     await tester.pumpAndSettle();
     expect(c.isOpen, isTrue);
     expect(find.text('?'), findsNothing);
 
-    await tester.tap(find.bySemanticsLabel('Chiudi Assistente'));
+    await tester.tap(find.bySemanticsLabel('Close Assistant'));
     await tester.pumpAndSettle();
     expect(c.isOpen, isFalse);
-    expect(find.text('Assistente'), findsNothing);
+    expect(find.text('Assistant'), findsNothing);
 
     c.open();
     await tester.pumpAndSettle();
-    final header = find.ancestor(of: find.text('Assistente'), matching: find.byType(Row));
+    final header = find.ancestor(of: find.text('Assistant'), matching: find.byType(Row));
     await tester.tap(find.descendant(of: header, matching: find.text('×')));
     await tester.pumpAndSettle();
     expect(c.isOpen, isFalse);
@@ -216,12 +216,12 @@ void main() {
   });
 
   testWidgets('custom title and help icon', (tester) async {
-    final c = await pumpChatbot(tester, theme: const ChatbotTheme(title: 'Aiuto', helpIcon: 'i'));
+    final c = await pumpChatbot(tester, theme: const ChatbotTheme(title: 'Help', helpIcon: 'i'));
     expect(find.text('i'), findsOneWidget);
-    expect(find.bySemanticsLabel('Apri Aiuto'), findsOneWidget);
+    expect(find.bySemanticsLabel('Open Help'), findsOneWidget);
     c.open();
     await tester.pumpAndSettle();
-    expect(find.text('Aiuto'), findsOneWidget);
+    expect(find.text('Help'), findsOneWidget);
   });
 
   testWidgets('reduce motion opens the window and shows the text at once', (tester) async {
@@ -229,8 +229,8 @@ void main() {
     c.open();
     await tester.pump();
     expect(tester.widget<ScaleTransition>(find.byType(ScaleTransition)).scale.value, 1);
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
-    expect(find.text('Chiudi'), findsOneWidget);
+    expect(find.text('Hi! What do you want to do?'), findsOneWidget);
+    expect(find.text('Close'), findsOneWidget);
   });
 
   testWidgets('streaming text exposes the whole message to screen readers; older messages stay whole', (tester) async {
@@ -238,16 +238,16 @@ void main() {
     c.open();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsNothing);
-    expect(find.bySemanticsLabel('Ciao! Cosa vuoi fare?'), findsOneWidget);
+    expect(find.text('Hi! What do you want to do?'), findsNothing);
+    expect(find.bySemanticsLabel('Hi! What do you want to do?'), findsOneWidget);
 
     await tester.pumpAndSettle();
     c.choose(c.options.first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
-    expect(find.text('Registrare un iscritto'), findsOneWidget);
-    expect(find.text('Primo passo: la tessera.'), findsNothing);
+    expect(find.text('Hi! What do you want to do?'), findsOneWidget);
+    expect(find.text('Register a member'), findsOneWidget);
+    expect(find.text('First step: the card.'), findsNothing);
   });
 
   group('option shape', () {
@@ -260,7 +260,7 @@ void main() {
           optionShape: shape,
         );
     Size optionSize(WidgetTester tester) =>
-        tester.getSize(find.ancestor(of: find.text('Chiudi'), matching: find.byType(Container)).first);
+        tester.getSize(find.ancestor(of: find.text('Close'), matching: find.byType(Container)).first);
 
     testWidgets('pill is as wide as its text', (tester) async {
       final c = await pumpChatbot(tester, theme: shaped(ChatbotOptionShape.pill));
@@ -283,7 +283,7 @@ void main() {
       c.open();
       await tester.pumpAndSettle();
       expect(optionSize(tester).width, 280);
-      expect(tester.widget<Text>(find.text('Chiudi')).textAlign, TextAlign.center);
+      expect(tester.widget<Text>(find.text('Close')).textAlign, TextAlign.center);
       expect(find.text('›'), findsNothing);
     });
   });
@@ -292,8 +292,8 @@ void main() {
     final c = await pumpChatbot(
       tester,
       child: const Column(children: [
-        ChatbotHighlight(id: 'nome', child: SizedBox(width: 100, height: 20)),
-        ChatbotHighlight(id: 'altro', child: SizedBox(width: 100, height: 20)),
+        ChatbotHighlight(id: 'name', child: SizedBox(width: 100, height: 20)),
+        ChatbotHighlight(id: 'other', child: SizedBox(width: 100, height: 20)),
       ]),
     );
     Finder outline(String id) => find.descendant(
@@ -305,12 +305,12 @@ void main() {
       ..choose(c.options.first)
       ..choose(c.options.single);
     await tester.pumpAndSettle();
-    expect(outline('nome'), findsOneWidget);
-    expect(outline('altro'), findsNothing);
+    expect(outline('name'), findsOneWidget);
+    expect(outline('other'), findsNothing);
 
     c.close();
     await tester.pumpAndSettle();
-    expect(outline('nome'), findsNothing);
+    expect(outline('name'), findsNothing);
   });
 
   testWidgets('swapping the controller follows the new one', (tester) async {
@@ -326,10 +326,10 @@ void main() {
     ));
     old.open();
     await tester.pumpAndSettle();
-    expect(find.text('Assistente'), findsNothing);
+    expect(find.text('Assistant'), findsNothing);
 
     next.open();
     await tester.pumpAndSettle();
-    expect(find.text('Ciao! Cosa vuoi fare?'), findsOneWidget);
+    expect(find.text('Hi! What do you want to do?'), findsOneWidget);
   });
 }

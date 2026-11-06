@@ -9,22 +9,22 @@ The package has no look of its own. Every colour, font, corner, border, shadow, 
 ```dart
 final chatbot = ChatbotController(
   script: const ChatbotScript(start: 'home', steps: {
-    'home': ChatbotStep(message: 'Ciao! Cosa vuoi fare?', options: [
-      ChatbotOption('Registrare un iscritto', next: 'tessera'),
-      ChatbotOption('Altri argomenti', next: 'altro'),
+    'home': ChatbotStep(message: 'Hi! What do you want to do?', options: [
+      ChatbotOption('Register a member', next: 'card'),
+      ChatbotOption('Other topics', next: 'other'),
     ]),
-    'tessera': ChatbotStep(
-      message: "Ti ho aperto «Nuovo iscritto». L'iscritto ha una tessera?",
-      action: 'open:nuovo_iscritto', // your app opens the screen
-      options: [ChatbotOption('Sì', next: 'nome'), ChatbotOption('No', next: 'nome')],
+    'card': ChatbotStep(
+      message: 'I opened "New member". Does the member have a card?',
+      action: 'open:new_member', // your app opens the screen
+      options: [ChatbotOption('Yes', next: 'name'), ChatbotOption('No', next: 'name')],
     ),
-    'nome': ChatbotStep(
-      message: 'Scrivi nome e cognome come sul documento.',
-      highlight: 'nome', // outlines ChatbotHighlight(id: 'nome')
-      options: [ChatbotOption('Fatto, avanti', next: 'fine')],
+    'name': ChatbotStep(
+      message: 'Write first and last name as on the ID.',
+      highlight: 'name', // outlines ChatbotHighlight(id: 'name')
+      options: [ChatbotOption('Done, next', next: 'end')],
     ),
-    'fine': ChatbotStep(message: 'Fatto!', options: [ChatbotOption('Chiudi')]),
-    'altro': ChatbotStep(message: '…', options: [ChatbotOption('Torna indietro', next: 'home')]),
+    'end': ChatbotStep(message: 'Done!', options: [ChatbotOption('Close')]),
+    'other': ChatbotStep(message: '…', options: [ChatbotOption('Go back', next: 'home')]),
   }),
   onAction: (action) { /* navigate, prefill, … */ },
 );
@@ -41,7 +41,7 @@ MaterialApp(
 Wrap any field you want the assistant to point at:
 
 ```dart
-ChatbotHighlight(id: 'nome', child: TextField(...))
+ChatbotHighlight(id: 'name', child: TextField(...))
 ```
 
 ## Script rules
@@ -80,4 +80,4 @@ ChatbotTheme(
 
 With "reduce motion" on, the window opens and closes at once.
 
-The defaults match "Esempio 1" of the design. The design is in `design/local_chatbot.figcraft`: each of its "Assistente" variables maps to one of these settings.
+The defaults match "Example 1" of the design. The design is in `design/local_chatbot.figcraft`: each of its "Assistente" variables maps to one of these settings.

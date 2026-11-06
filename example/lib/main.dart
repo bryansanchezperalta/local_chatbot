@@ -4,19 +4,19 @@ import 'package:local_chatbot/local_chatbot.dart';
 void main() => runApp(const DemoApp());
 
 const _script = ChatbotScript(start: 'home', steps: {
-  'home': ChatbotStep(message: 'Ciao! Cosa vuoi fare?', options: [
-    ChatbotOption('Registrare un iscritto', next: 'nome'),
-    ChatbotOption('Altri argomenti', next: 'altro'),
+  'home': ChatbotStep(message: 'Hi! What do you want to do?', options: [
+    ChatbotOption('Register a member', next: 'name'),
+    ChatbotOption('Other topics', next: 'other'),
   ]),
-  'nome': ChatbotStep(
-    message: 'Scrivi nome e cognome come sul documento.',
-    highlight: 'nome',
-    options: [ChatbotOption('Fatto, avanti', next: 'fine')],
+  'name': ChatbotStep(
+    message: 'Write first and last name as on the ID.',
+    highlight: 'name',
+    options: [ChatbotOption('Done, next', next: 'end')],
   ),
-  'fine': ChatbotStep(message: 'Fatto!', options: [ChatbotOption('Chiudi')]),
-  'altro': ChatbotStep(
-    message: 'Altri argomenti.',
-    options: [ChatbotOption('Torna indietro', next: 'home')],
+  'end': ChatbotStep(message: 'Done!', options: [ChatbotOption('Close')]),
+  'other': ChatbotStep(
+    message: 'Other topics.',
+    options: [ChatbotOption('Go back', next: 'home')],
   ),
 });
 
@@ -39,8 +39,8 @@ class _DemoAppState extends State<DemoApp> {
               child: SizedBox(
                 width: 300,
                 child: ChatbotHighlight(
-                  id: 'nome',
-                  child: TextField(decoration: InputDecoration(labelText: 'Nome e cognome')),
+                  id: 'name',
+                  child: TextField(decoration: InputDecoration(labelText: 'First and last name')),
                 ),
               ),
             ),

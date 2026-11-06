@@ -31,7 +31,7 @@ class ChatbotTheme {
     this.headerTitleColor = const Color(0xFF1C1C1E),
     this.headerCloseColor = const Color(0xFF8E8E93),
     this.headerTitleSize = 14,
-    this.title = 'Assistente',
+    this.title = 'Assistant',
     this.messageGap = 8,
     this.messagePadding = 12,
     this.assistantBubbleColor = const Color(0xFFF2F2F7),

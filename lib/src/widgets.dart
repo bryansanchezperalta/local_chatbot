@@ -118,7 +118,7 @@ class _HelpButton extends StatelessWidget {
     final t = theme;
     return Semantics(
       button: true,
-      label: controller.isOpen ? 'Chiudi ${t.title}' : 'Apri ${t.title}',
+      label: controller.isOpen ? 'Close ${t.title}' : 'Open ${t.title}',
       excludeSemantics: true,
       child: GestureDetector(
         onTap: controller.toggle,
@@ -186,7 +186,7 @@ class _WindowState extends State<_Window> {
                   ),
                   Semantics(
                     button: true,
-                    label: 'Chiudi',
+                    label: 'Close',
                     excludeSemantics: true,
                     child: GestureDetector(
                       onTap: controller.close,
