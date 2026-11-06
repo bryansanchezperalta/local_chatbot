@@ -21,6 +21,11 @@ class ChatbotController extends ChangeNotifier {
   /// Answers an option's `check`: `true` if the user really did it (e.g. filled in a field).
   final bool Function(String check)? onCheck;
 
+  /// Actions and checks of the screens on display, usually added by `ChatbotHandlers`.
+  /// They win over [onAction] and [onCheck].
+  final Map<String, VoidCallback> actions = {};
+  final Map<String, bool Function()> checks = {};
+
   final List<ChatbotMessage> _messages = [];
   ChatbotStep? _step;
   bool _open = false;
@@ -55,12 +60,12 @@ class ChatbotController extends ChangeNotifier {
       throw ArgumentError.value(option.label, 'option', 'Not an option of the current step');
     }
     final check = option.check;
-    if (check != null && onCheck == null) {
+    if (check != null && !checks.containsKey(check) && onCheck == null) {
       throw StateError('Option "${option.label}" has a check but onCheck is not set');
     }
     _messages.add(ChatbotMessage(option.label, fromUser: true));
-    if (check != null && !onCheck!(check)) return _show(option.otherwise!);
-    if (option.action != null) onAction?.call(option.action!);
+    if (check != null && !(checks[check]?.call() ?? onCheck!(check))) return _show(option.otherwise!);
+    if (option.action != null) _run(option.action!);
     final next = option.next;
     if (next == null) return close();
     _show(next);
@@ -70,7 +75,12 @@ class ChatbotController extends ChangeNotifier {
     final step = script[id];
     _step = step;
     _messages.add(ChatbotMessage(step.message, fromUser: false));
-    if (step.action != null) onAction?.call(step.action!);
+    if (step.action != null) _run(step.action!);
     notifyListeners();
+  }
+
+  void _run(String action) {
+    final own = actions[action];
+    own != null ? own() : onAction?.call(action);
   }
 }

@@ -20,13 +20,20 @@ class Chatbot extends StatefulWidget {
     super.key,
     required this.controller,
     this.theme = const ChatbotTheme(),
-    this.margin = 16,
+    this.margin = const EdgeInsets.all(16),
+    this.gap = 16,
     required this.child,
   });
 
   final ChatbotController controller;
   final ChatbotTheme theme;
-  final double margin;
+
+  /// Distance of the help button from the screen's right and bottom edges
+  /// (e.g. to clear a floating action button). Left and top are ignored.
+  final EdgeInsets margin;
+
+  /// Space between the help button and the window above it.
+  final double gap;
   final Widget child;
 
   @override
@@ -76,9 +83,10 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
     final t = widget.theme;
     final c = widget.controller;
     final m = widget.margin;
+    final g = widget.gap;
     final s = t.helpButtonSize;
-    // Window and button share the right edge; the button sits [m] below the window.
-    final origin = FractionalOffset((t.windowWidth - s / 2) / t.windowWidth, (t.windowHeight + m + s / 2) / t.windowHeight);
+    // Window and button share the right edge; the button sits [g] below the window.
+    final origin = FractionalOffset((t.windowWidth - s / 2) / t.windowWidth, (t.windowHeight + g + s / 2) / t.windowHeight);
     _curved
       ..curve = t.openCurve
       ..reverseCurve = t.closeCurve;
@@ -92,13 +100,13 @@ class _ChatbotState extends State<Chatbot> with SingleTickerProviderStateMixin {
             Positioned.fill(child: widget.child),
             if (!_anim.isDismissed)
               Positioned(
-                right: m,
-                bottom: m * 2 + s,
+                right: m.right,
+                bottom: m.bottom + g + s,
                 child: (t.windowTransition ?? _grow)(_curved, origin, _Window(controller: c, theme: t)),
               ),
             Positioned(
-              right: m,
-              bottom: m,
+              right: m.right,
+              bottom: m.bottom,
               child: _HelpButton(controller: c, theme: t),
             ),
           ],
@@ -387,4 +395,60 @@ class ChatbotHighlight extends StatelessWidget {
       child: child,
     );
   }
+}
+
+/// Lets a host screen answer the chatbot while it is on display: [actions]
+/// (e.g. open a screen from here) and [checks] (e.g. is this field filled in?)
+/// win over the controller's `onAction` and `onCheck`. Must sit under [Chatbot].
+class ChatbotHandlers extends StatefulWidget {
+  const ChatbotHandlers({super.key, this.actions = const {}, this.checks = const {}, required this.child});
+  final Map<String, VoidCallback> actions;
+  final Map<String, bool Function()> checks;
+  final Widget child;
+
+  @override
+  State<ChatbotHandlers> createState() => _ChatbotHandlersState();
+}
+
+class _ChatbotHandlersState extends State<ChatbotHandlers> {
+  ChatbotController? _controller;
+  Map<String, VoidCallback> _actions = const {};
+  Map<String, bool Function()> _checks = const {};
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final scope = context.dependOnInheritedWidgetOfExactType<_Scope>();
+    assert(scope != null, 'ChatbotHandlers must be under a Chatbot widget');
+    _register(scope?.notifier);
+  }
+
+  @override
+  void didUpdateWidget(ChatbotHandlers old) {
+    super.didUpdateWidget(old);
+    _register(_controller);
+  }
+
+  @override
+  void dispose() {
+    _register(null);
+    super.dispose();
+  }
+
+  void _register(ChatbotController? controller) {
+    final old = _controller;
+    // Removes only its own entries: another screen may have taken the same id since.
+    if (old != null) {
+      _actions.forEach((id, f) => old.actions[id] == f ? old.actions.remove(id) : null);
+      _checks.forEach((id, f) => old.checks[id] == f ? old.checks.remove(id) : null);
+    }
+    _controller = controller;
+    _actions = widget.actions;
+    _checks = widget.checks;
+    controller?.actions.addAll(_actions);
+    controller?.checks.addAll(_checks);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

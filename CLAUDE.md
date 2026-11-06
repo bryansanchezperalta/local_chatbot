@@ -26,12 +26,14 @@ All written text in this repository is in English: code comments, doc comments, 
 - Project without a client: drafts are deleted right after approval.
 
 ## Code: status
-- Flutter package 0.0.1 in `lib/`: `ChatbotScript`/`ChatbotStep`/`ChatbotOption` (script), `ChatbotController`, `Chatbot` (Help button + window at bottom right), `ChatbotHighlight`, `ChatbotTheme` (all settings of the design; default = Example 1).
+- Flutter package 0.0.1 in `lib/`: `ChatbotScript`/`ChatbotStep`/`ChatbotOption` (script), `ChatbotController`, `Chatbot` (Help button + window at bottom right), `ChatbotHighlight`, `ChatbotHandlers`, `ChatbotTheme` (all settings of the design; default = Example 1).
 - Assistant messages appear one letter at a time (stream style). Options appear only when the message is complete. Speed: `ChatbotTheme.streamCharDuration` (20 ms, `Duration.zero` = off). With "reduce motion" on, the text appears at once.
 - The window opens and closes with an animation: by default it grows from the Help button and fades in (similar to Hero). Customize with `openDuration` (250 ms, `Duration.zero` = off), `openCurve`, `closeCurve` and `windowTransition` (replaces the whole animation). With "reduce motion" on it opens at once.
 - The window has a fixed height (`ChatbotTheme.windowHeight`, 420) and the message list scrolls. The first messages sit at the top. When the list is long the last message stays visible.
 - In code the Riga and Pulsante options follow the window width: the design limit does not exist.
 - An option can have a `check` (id) and `otherwise` (step): the host app answers with `onCheck` (true = done). If it fails, the chat goes to `otherwise` and the option's action does not run. The example checks that first and last name are filled in.
+- A screen can answer the chatbot itself with `ChatbotHandlers` (`actions`, `checks`): they win over `onAction`/`onCheck` while the screen is on display. Found trying it on gym-toolbox: the chatbot sits above the Navigator and cannot see the screens.
+- `Chatbot.margin` is `EdgeInsets` (right and bottom used), `Chatbot.gap` is the space between button and window. Found on gym-toolbox: the help button covered the floating action buttons.
 - Default UI strings are English (`title` "Assistant", semantics labels "Open …"/"Close …").
 - Flutter SDK on this computer: `~/flutter/bin/flutter` (not in PATH).
 - `LICENSE` is still the `flutter create` placeholder: the partner must choose the license.

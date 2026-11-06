@@ -20,16 +20,19 @@ const script = ChatbotScript(start: 'home', steps: {
 /// Pumps a [Chatbot] over [child] and returns its controller.
 Future<ChatbotController> pumpChatbot(
   WidgetTester tester, {
+  ChatbotController? controller,
   ChatbotTheme theme = const ChatbotTheme(),
+  EdgeInsets margin = const EdgeInsets.all(16),
+  double gap = 16,
   Widget child = const SizedBox(),
   bool reduceMotion = false,
 }) async {
-  final c = ChatbotController(script: script);
+  final c = controller ?? ChatbotController(script: script);
   await tester.pumpWidget(MediaQuery(
     data: MediaQueryData(disableAnimations: reduceMotion),
     child: Directionality(
       textDirection: TextDirection.ltr,
-      child: Chatbot(controller: c, theme: theme, child: child),
+      child: Chatbot(controller: c, theme: theme, margin: margin, gap: gap, child: child),
     ),
   ));
   return c;
@@ -374,5 +377,74 @@ void main() {
     next.open();
     await tester.pumpAndSettle();
     expect(find.text('Hi! What do you want to do?'), findsOneWidget);
+  });
+
+  testWidgets('margin sets the right and bottom distance, gap the space between window and button', (tester) async {
+    final c = await pumpChatbot(tester, margin: const EdgeInsets.only(right: 10, bottom: 90), gap: 6);
+    c.open();
+    await tester.pumpAndSettle();
+    final spots = tester
+        .widgetList<Positioned>(find.descendant(of: find.byType(Chatbot), matching: find.byType(Positioned)))
+        .map((p) => (p.right, p.bottom));
+    // Button at the margin; window above it: 90 + 44 (button) + 6.
+    expect(spots, containsAll([(10.0, 90.0), (10.0, 140.0)]));
+  });
+
+  group('ChatbotHandlers', () {
+    const checked = ChatbotScript(start: 'name', steps: {
+      'name': ChatbotStep(message: 'Write the name.', options: [
+        ChatbotOption('Done, next', next: 'end', check: 'name_filled', otherwise: 'missing'),
+      ]),
+      'missing': ChatbotStep(message: 'The name is still empty.'),
+      'end': ChatbotStep(message: 'Done!'),
+    });
+
+    testWidgets('a screen action runs instead of onAction', (tester) async {
+      final host = <String>[], screen = <String>[];
+      final c = await pumpChatbot(
+        tester,
+        controller: ChatbotController(script: script, onAction: host.add),
+        child: ChatbotHandlers(actions: {'open:new_member': () => screen.add('opened')}, child: const SizedBox()),
+      );
+      c
+        ..open()
+        ..choose(c.options.first);
+      expect(screen, ['opened']);
+      expect(host, isEmpty);
+    });
+
+    testWidgets('a screen check answers without onCheck', (tester) async {
+      var filled = false;
+      final c = await pumpChatbot(
+        tester,
+        controller: ChatbotController(script: checked),
+        child: ChatbotHandlers(checks: {'name_filled': () => filled}, child: const SizedBox()),
+      );
+      c
+        ..open()
+        ..choose(c.options.single);
+      expect(c.messages.last.text, 'The name is still empty.');
+
+      filled = true;
+      c
+        ..open()
+        ..choose(c.options.single);
+      expect(c.messages.last.text, 'Done!');
+    });
+
+    testWidgets('once the screen is gone, the controller answers again', (tester) async {
+      final host = <String>[];
+      final c = ChatbotController(script: script, onAction: host.add);
+      await pumpChatbot(
+        tester,
+        controller: c,
+        child: ChatbotHandlers(actions: {'open:new_member': () {}}, child: const SizedBox()),
+      );
+      await pumpChatbot(tester, controller: c);
+      c
+        ..open()
+        ..choose(c.options.first);
+      expect(host, ['open:new_member']);
+    });
   });
 }

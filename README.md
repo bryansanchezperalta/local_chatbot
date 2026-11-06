@@ -58,6 +58,26 @@ onCheck: (check) => check == 'name_filled' && nameField.text.trim().isNotEmpty,
 
 - An unknown step id throws an `ArgumentError`.
 
+## Screens that answer
+
+`Chatbot` sits above the app's screens and cannot see them. A screen can answer for itself while it is on display: wrap it in `ChatbotHandlers`. Its `actions` and `checks` win over `onAction` and `onCheck`, and stop when the screen leaves the tree.
+
+```dart
+ChatbotHandlers(
+  actions: {'open:new_member': () => Navigator.push(context, newMemberRoute)},
+  checks: {'name_filled': () => nameField.text.trim().isNotEmpty},
+  child: ...,
+)
+```
+
+## Position
+
+`margin` sets the help button's distance from the right and bottom edges, for example to clear a floating action button. `gap` is the space between the button and the window.
+
+```dart
+Chatbot(margin: const EdgeInsets.only(right: 16, bottom: 88), gap: 16, ...)
+```
+
 ## Theme
 
 `ChatbotTheme` settings, grouped by part:
