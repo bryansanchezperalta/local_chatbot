@@ -15,4 +15,7 @@ Package Flutter pubblico, progetto personale del socio (non Aura). Repository pu
 - Proposte B e C scartate ed eliminate.
 - Il pulsante "Altre domande" è diventato "Altri argomenti": apre un altro elenco di voci già scritte.
 - Esempio usato nello sketch: gym-toolbox, "Registrare un iscritto".
-- Step UI in corso: pagina "Proposta" con le 4 schermate in 3 varianti (1 Pulita, 2 Elenco, 3 Morbida). In attesa di approvazione.
+- Step UI in corso, pagina "Proposta". Il socio ha chiesto che sia personalizzabile tutto, anche la forma delle opzioni: niente varianti di stile da scegliere.
+  - Un solo design legato alle variabili "Assistente" (colori, font, angoli, bordi, ombre, spazi, titolo, forma opzione).
+  - Componente "Opzione" con proprietà Forma = Pillola / Riga / Pulsante, legata alla variabile Opzione/Forma.
+  - Le 3 righe sono 3 esempi di impostazioni (modi Esempio 1/2/3), con i font Figtree, Roboto e PT Sans. In fondo c'è la tabella "Cosa si può personalizzare". In attesa di approvazione.
