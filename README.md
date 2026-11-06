@@ -48,6 +48,14 @@ ChatbotHighlight(id: 'name', child: TextField(...))
 
 - `ChatbotOption.next == null` closes the chat.
 - A step's `action` runs when the step is shown. An option's `action` runs when the option is tapped. Both go to `onAction`.
+- An option's `check` asks `onCheck` whether the user really did the step. If `onCheck` returns `false`, the chat goes to `otherwise` instead of `next`, and the option's `action` does not run. `check` and `otherwise` go together. A `check` without `onCheck` throws a `StateError`.
+
+```dart
+ChatbotOption('Done, next', next: 'end', check: 'name_filled', otherwise: 'name_missing'),
+// …
+onCheck: (check) => check == 'name_filled' && nameField.text.trim().isNotEmpty,
+```
+
 - An unknown step id throws an `ArgumentError`.
 
 ## Theme

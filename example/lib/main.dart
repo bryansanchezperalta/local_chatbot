@@ -11,7 +11,12 @@ const _script = ChatbotScript(start: 'home', steps: {
   'name': ChatbotStep(
     message: 'Write first and last name as on the ID.',
     highlight: 'name',
-    options: [ChatbotOption('Done, next', next: 'end')],
+    options: [ChatbotOption('Done, next', next: 'end', check: 'name', otherwise: 'name_missing')],
+  ),
+  'name_missing': ChatbotStep(
+    message: 'The name is still empty. Write first and last name, then tap "Done, next".',
+    highlight: 'name',
+    options: [ChatbotOption('Done, next', next: 'end', check: 'name', otherwise: 'name_missing')],
   ),
   'end': ChatbotStep(message: 'Done!', options: [ChatbotOption('Close')]),
   'other': ChatbotStep(
@@ -28,19 +33,31 @@ class DemoApp extends StatefulWidget {
 }
 
 class _DemoAppState extends State<DemoApp> {
-  final _chatbot = ChatbotController(script: _script, onAction: debugPrint);
+  final _name = TextEditingController();
+  late final _chatbot = ChatbotController(
+    script: _script,
+    onAction: debugPrint,
+    onCheck: (check) => check == 'name' && _name.text.trim().isNotEmpty,
+  );
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _chatbot.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => MaterialApp(
         home: Scaffold(
           body: Chatbot(
             controller: _chatbot,
-            child: const Center(
+            child: Center(
               child: SizedBox(
                 width: 300,
                 child: ChatbotHighlight(
                   id: 'name',
-                  child: TextField(decoration: InputDecoration(labelText: 'First and last name')),
+                  child: TextField(controller: _name, decoration: const InputDecoration(labelText: 'First and last name')),
                 ),
               ),
             ),

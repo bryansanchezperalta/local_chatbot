@@ -36,7 +36,8 @@ class ChatbotStep {
 
 /// A button under a message. Tapping it shows [label] as the user's reply.
 class ChatbotOption {
-  const ChatbotOption(this.label, {this.next, this.action});
+  const ChatbotOption(this.label, {this.next, this.action, this.check, this.otherwise})
+      : assert((check == null) == (otherwise == null), 'check and otherwise go together');
 
   final String label;
 
@@ -45,4 +46,11 @@ class ChatbotOption {
 
   /// Passed to `onAction` when tapped.
   final String? action;
+
+  /// Passed to `onCheck` when tapped (e.g. "is the name filled in?").
+  /// If it fails, the chat goes to [otherwise] instead of [next] and [action] does not run.
+  final String? check;
+
+  /// Step to go to when [check] fails.
+  final String? otherwise;
 }

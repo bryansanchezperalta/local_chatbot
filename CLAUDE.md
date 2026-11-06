@@ -31,6 +31,7 @@ All written text in this repository is in English: code comments, doc comments, 
 - The window opens and closes with an animation: by default it grows from the Help button and fades in (similar to Hero). Customize with `openDuration` (250 ms, `Duration.zero` = off), `openCurve`, `closeCurve` and `windowTransition` (replaces the whole animation). With "reduce motion" on it opens at once.
 - The window has a fixed height (`ChatbotTheme.windowHeight`, 420) and the message list scrolls. The first messages sit at the top. When the list is long the last message stays visible.
 - In code the Riga and Pulsante options follow the window width: the design limit does not exist.
+- An option can have a `check` (id) and `otherwise` (step): the host app answers with `onCheck` (true = done). If it fails, the chat goes to `otherwise` and the option's action does not run. The example checks that first and last name are filled in.
 - Default UI strings are English (`title` "Assistant", semantics labels "Open …"/"Close …").
 - Flutter SDK on this computer: `~/flutter/bin/flutter` (not in PATH).
 - `LICENSE` is still the `flutter create` placeholder: the partner must choose the license.

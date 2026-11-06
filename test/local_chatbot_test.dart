@@ -97,6 +97,49 @@ void main() {
       expect(quiet.highlight, 'name');
     });
 
+    group('option check', () {
+      const checked = ChatbotScript(start: 'name', steps: {
+        'name': ChatbotStep(message: 'Write the name.', options: [
+          ChatbotOption('Done, next', next: 'end', action: 'name_ok', check: 'name_filled', otherwise: 'missing'),
+        ]),
+        'missing': ChatbotStep(message: 'The name is still empty.'),
+        'end': ChatbotStep(message: 'Done!'),
+      });
+      late bool filled;
+      late List<String> checks;
+      ChatbotController checking() => ChatbotController(
+            script: checked,
+            onAction: actions.add,
+            onCheck: (check) {
+              checks.add(check);
+              return filled;
+            },
+          )..open();
+      setUp(() => checks = []);
+
+      test('passing check runs the action and goes to next', () {
+        filled = true;
+        final c = checking();
+        c.choose(c.options.single);
+        expect(checks, ['name_filled']);
+        expect(actions, ['name_ok']);
+        expect(c.messages.last.text, 'Done!');
+      });
+
+      test('failing check skips the action and goes to otherwise', () {
+        filled = false;
+        final c = checking();
+        c.choose(c.options.single);
+        expect(actions, isEmpty);
+        expect(c.messages.map((m) => m.text), ['Write the name.', 'Done, next', 'The name is still empty.']);
+      });
+
+      test('a check without onCheck fails loudly', () {
+        final c = ChatbotController(script: checked)..open();
+        expect(() => c.choose(c.options.single), throwsStateError);
+      });
+    });
+
     test('unknown step id fails loudly', () {
       final bad = ChatbotController(script: const ChatbotScript(start: 'nope', steps: {}));
       expect(bad.open, throwsArgumentError);

@@ -11,12 +11,15 @@ class ChatbotMessage {
 
 /// Conversation state. Create one per app, or let [Chatbot] create it.
 class ChatbotController extends ChangeNotifier {
-  ChatbotController({required this.script, this.onAction});
+  ChatbotController({required this.script, this.onAction, this.onCheck});
 
   final ChatbotScript script;
 
   /// Runs the host app's actions (open a screen, ...).
   final void Function(String action)? onAction;
+
+  /// Answers an option's `check`: `true` if the user really did it (e.g. filled in a field).
+  final bool Function(String check)? onCheck;
 
   final List<ChatbotMessage> _messages = [];
   ChatbotStep? _step;
@@ -51,7 +54,12 @@ class ChatbotController extends ChangeNotifier {
     if (!options.contains(option)) {
       throw ArgumentError.value(option.label, 'option', 'Not an option of the current step');
     }
+    final check = option.check;
+    if (check != null && onCheck == null) {
+      throw StateError('Option "${option.label}" has a check but onCheck is not set');
+    }
     _messages.add(ChatbotMessage(option.label, fromUser: true));
+    if (check != null && !onCheck!(check)) return _show(option.otherwise!);
     if (option.action != null) onAction?.call(option.action!);
     final next = option.next;
     if (next == null) return close();
