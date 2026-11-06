@@ -30,3 +30,14 @@ Package Flutter pubblico, progetto personale del socio (non Aura). Repository pu
 - Nel codice le opzioni Riga e Pulsante seguono la larghezza della finestra: il limite del design non c'è.
 - Flutter SDK su questo computer: `~/flutter/bin/flutter` (non nel PATH).
 - `LICENSE` è ancora il segnaposto di `flutter create`: la licenza va scelta dal socio.
+
+## Metodo: TDD (deciso 2026-11-06)
+Ogni nuovo sviluppo (funzione, modifica di comportamento, correzione di un errore) si fa con il test per primo:
+1. **Rosso**: si scrive il test del comportamento voluto e lo si esegue. Deve fallire per il motivo giusto (manca la funzione o il comportamento è sbagliato), non per un errore di sintassi.
+2. **Verde**: si scrive il minimo codice che fa passare quel test. Si eseguono tutti i test.
+3. **Pulizia**: si semplifica il codice, con i test sempre verdi.
+- Non si scrive codice in `lib/` senza un test rosso che lo richieda.
+- Un errore trovato si corregge scrivendo prima un test che lo riproduce (rosso).
+- Nell'ultimo messaggio si dice che il test era rosso prima e verde dopo.
+- Test in `test/local_chatbot_test.dart`; per i widget si usa l'helper `pumpChatbot`.
+- Comandi: `~/flutter/bin/flutter test` e `~/flutter/bin/flutter analyze`.
