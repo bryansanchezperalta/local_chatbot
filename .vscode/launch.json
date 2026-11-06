@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "example (debug, macOS)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "example",
+      "program": "lib/main.dart",
+      "deviceId": "macos",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "example (debug, Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "example",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "example (profile)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "example",
+      "program": "lib/main.dart",
+      "flutterMode": "profile"
+    }
+  ]
+}
