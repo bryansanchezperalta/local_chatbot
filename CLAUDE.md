@@ -15,3 +15,4 @@ Package Flutter pubblico, progetto personale del socio (non Aura). Repository pu
 - Proposte B e C scartate ed eliminate.
 - Il pulsante "Altre domande" è diventato "Altri argomenti": apre un altro elenco di voci già scritte.
 - Esempio usato nello sketch: gym-toolbox, "Registrare un iscritto".
+- Step UI in corso: pagina "Proposta" con le 4 schermate in 3 varianti (1 Pulita, 2 Elenco, 3 Morbida). In attesa di approvazione.
