@@ -1,6 +1,6 @@
 name: local_chatbot
 description: "Local, pre-written assistant for Flutter apps: no AI, answers chosen with buttons, fully themeable."
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/bryansanchezperalta/local_chatbot
 
 environment:
