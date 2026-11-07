@@ -207,9 +207,50 @@ void main() {
       await tester.pumpAndSettle();
     }
     expect(tester.getSize(window).height, 150);
-    final scroll = tester.widget<SingleChildScrollView>(find.byType(SingleChildScrollView));
-    expect(scroll.reverse, isTrue);
     expect(tester.state<ScrollableState>(find.byType(Scrollable)).position.maxScrollExtent, greaterThan(0));
+  });
+
+  /// Opens a short window and fills it until it scrolls; returns the scroll position.
+  Future<ScrollPosition> longChat(WidgetTester tester, ChatbotController c) async {
+    c.open();
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 3; i++) {
+      c.choose(c.options.first);
+      await tester.pumpAndSettle();
+      c.choose(c.options.first);
+      await tester.pumpAndSettle();
+    }
+    return tester.state<ScrollableState>(find.byType(Scrollable)).position;
+  }
+
+  testWidgets('typing follows the text, options appearing do not scroll', (tester) async {
+    final c = await pumpChatbot(tester, theme: const ChatbotTheme(windowHeight: 150));
+    final pos = await longChat(tester, c);
+    c.choose(c.options.first); // 'Register a member': 'card' starts typing
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(pos.pixels, pos.maxScrollExtent);
+    expect(pos.maxScrollExtent, greaterThan(0));
+
+    final typed = pos.pixels;
+    await tester.pumpAndSettle(); // 'Done, next' appears below
+    expect(pos.pixels, lessThan(pos.maxScrollExtent));
+    expect(pos.pixels, greaterThanOrEqualTo(typed));
+  });
+
+  testWidgets('scrolling away while typing stops the follow', (tester) async {
+    final c = await pumpChatbot(tester, theme: const ChatbotTheme(windowHeight: 150));
+    final pos = await longChat(tester, c);
+    c.choose(c.options.first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 40));
+    final held = pos.pixels;
+    expect(held, lessThan(pos.maxScrollExtent));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(pos.pixels, held);
   });
 
   testWidgets('window animates open from the help button and stays until it has closed', (tester) async {

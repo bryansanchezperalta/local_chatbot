@@ -162,6 +162,27 @@ class _WindowState extends State<_Window> {
   /// Last assistant message whose typing has finished.
   ChatbotMessage? _streamed;
 
+  /// Last message seen: a new one means the user chose, so follow again.
+  ChatbotMessage? _seen;
+
+  /// True while the list sits at its end; scrolling away turns it off.
+  bool _follow = true;
+  final _scroll = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(() => _follow = _scroll.position.extentAfter < 1);
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _toEnd() => _scroll.jumpTo(_scroll.position.maxScrollExtent);
+
   @override
   Widget build(BuildContext context) {
     final t = widget.theme;
@@ -169,6 +190,11 @@ class _WindowState extends State<_Window> {
     final last = controller.messages.lastOrNull;
     final instant = t.streamCharDuration == Duration.zero || (MediaQuery.maybeDisableAnimationsOf(context) ?? false);
     final streaming = !instant && last != null && !last.fromUser && last != _streamed;
+    if (last != _seen) {
+      _seen = last;
+      _follow = true;
+      if (instant) WidgetsBinding.instance.addPostFrameCallback((_) => _scroll.hasClients ? _toEnd() : null);
+    }
     final radius = BorderRadius.circular(t.windowRadius);
     return Container(
       width: t.windowWidth,
@@ -209,30 +235,31 @@ class _WindowState extends State<_Window> {
               ),
             ),
             Expanded(
-              // reverse keeps the newest message in view; the min height keeps short chats at the top.
-              child: LayoutBuilder(
-                builder: (context, box) => SingleChildScrollView(
-                  reverse: true,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: box.maxHeight),
-                    child: Padding(
-                      padding: EdgeInsets.all(t.messagePadding),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (final m in controller.messages)
-                            _Bubble(
-                              key: ObjectKey(m),
-                              message: m,
-                              theme: t,
-                              onStreamed: streaming && m == last ? () => setState(() => _streamed = m) : null,
-                            ),
-                          if (!streaming)
-                            for (final o in controller.options)
-                              _Option(option: o, theme: t, onTap: () => controller.choose(o)),
-                        ].expand((w) => [w, SizedBox(height: t.messageGap)]).toList()..removeLast(),
-                      ),
+              // While typing, follow the text unless the user scrolled away; options appearing never scroll.
+              child: NotificationListener<ScrollMetricsNotification>(
+                onNotification: (_) {
+                  if (streaming && _follow) _toEnd();
+                  return false;
+                },
+                child: SingleChildScrollView(
+                  controller: _scroll,
+                  child: Padding(
+                    padding: EdgeInsets.all(t.messagePadding),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final m in controller.messages)
+                          _Bubble(
+                            key: ObjectKey(m),
+                            message: m,
+                            theme: t,
+                            onStreamed: streaming && m == last ? () => setState(() => _streamed = m) : null,
+                          ),
+                        if (!streaming)
+                          for (final o in controller.options)
+                            _Option(option: o, theme: t, onTap: () => controller.choose(o)),
+                      ].expand((w) => [w, SizedBox(height: t.messageGap)]).toList()..removeLast(),
                     ),
                   ),
                 ),
